@@ -86,6 +86,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
 	private Mat mRgba;
 	private Mat mGray;
+	private Mat mHist;
 	// matrix for zooming
 	private Mat mZoomWindow;
 	private Mat mZoomWindow2;
@@ -307,11 +308,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 	public void onCameraViewStarted(int width, int height) {
 		mGray = new Mat();
 		mRgba = new Mat();
+		mHist = new Mat();
 	}
 
 	public void onCameraViewStopped() {
 		mGray.release();
 		mRgba.release();
+		mHist.release();
 		mZoomWindow.release();
 		mZoomWindow2.release();
 	}
@@ -327,6 +330,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
 		mRgba = inputFrame.rgba();
 		mGray = inputFrame.gray();
+		Imgproc.equalizeHist(mGray,mHist);
 
 		if (mAbsoluteFaceSize == 0) {
 			int height = mGray.rows();
@@ -515,7 +519,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 	}
 	private double match_eye(Rect area, Mat mTemplate, int type) {
 		Point matchLoc;
-		Mat mROI = mGray.submat(area);
+		Mat mROI = mHist.submat(area);
 		int result_cols = mROI.cols() - mTemplate.cols() + 1;
 		int result_rows = mROI.rows() - mTemplate.rows() + 1;
 		// Check for bad template size
@@ -570,7 +574,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
 	private Mat get_template(CascadeClassifier clasificator, Rect area, int size) {
 		Mat template = new Mat();
-		Mat mROI = mGray.submat(area);
+		Mat mROI = mHist.submat(area);
 		MatOfRect eyes = new MatOfRect();
 		Point iris = new Point();
 		Rect eye_template = new Rect();
@@ -589,7 +593,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 					(int) (e.height * 0.6));
 			mROI = mGray.submat(eye_only_rectangle);
 			Mat vyrez = mRgba.submat(eye_only_rectangle);
-			
+
 			
 			Core.MinMaxLocResult mmG = Core.minMaxLoc(mROI);
 
